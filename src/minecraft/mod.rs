@@ -10,7 +10,7 @@ use std::fmt::Debug;
 #[derive(Debug, Clone)]
 pub struct MinecraftPerlin<Random: MinecraftRandom> {
     amplitudes: Vec<f64>,
-    first_octave: f64,
+    first_octave: i32,
     rng: Random,
     lowest_freq_value_factor: f64,
     lowest_freq_input_factor: f64,
@@ -33,12 +33,12 @@ impl<Random: MinecraftRandom> Noise<f64, 5> for MinecraftPerlin<Random> {
 }
 
 impl<Random: MinecraftRandom> MinecraftPerlin<Random> {
-    pub fn new<T: Into<(Vec<f64>, f64)>>(t: T, mut rand: Random) -> Self {
+    pub fn new<T: Into<(Vec<f64>, i32)>>(t: T, mut rand: Random) -> Self {
         let (amplitudes, first_octave) = t.into();
         let mut noise_levels = Vec::with_capacity(amplitudes.len());
         for (index, value) in amplitudes.iter().enumerate() {
             if *value != 0.0 {
-                let value = first_octave + index as f64;
+                let value = first_octave + index as i32;
                 noise_levels.push(Some(ImprovedNoise::new(
                     rand.new_from_hash(format!("octave_{value}")),
                 )));
@@ -54,7 +54,7 @@ impl<Random: MinecraftRandom> MinecraftPerlin<Random> {
             first_octave,
             rng: rand,
             lowest_freq_value_factor,
-            lowest_freq_input_factor: 2_f64.powf(first_octave),
+            lowest_freq_input_factor: 2_f64.powi(first_octave),
             max_value: 0.0,
             noise_levels,
         };
@@ -131,7 +131,7 @@ pub mod minecraft_test {
     #[test]
     pub fn test() {
         SimpleLogger::new().init().unwrap();
-        let mut perlin = MinecraftPerlin::new((vec![1.0, 1.0, 1.0, 0.0], -3.0), MinecraftXoroshiro128::new(3_658));
+        let mut perlin = MinecraftPerlin::new((vec![1.0, 1.0, 1.0, 0.0], -3), MinecraftXoroshiro128::new(3_658));
         let value = perlin.get_value(0.0, 0.0, 0.0, 0.0, 0.0);
         println!("Value: {}", value);
     }
