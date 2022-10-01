@@ -2,6 +2,7 @@ use crate::minecraft::random::MinecraftRandom;
 use rand::Rng;
 use std::fmt::Debug;
 use std::ops::BitAnd;
+use log::debug;
 
 /// From the Minecraft source code:
 static GRADIENTS: [[i8; 3]; 16] = [
@@ -37,22 +38,29 @@ pub struct ImprovedNoise<Random: MinecraftRandom> {
 
 impl<Random: MinecraftRandom> ImprovedNoise<Random> {
     pub fn new(mut rand: Random) -> Self {
-        let mut permutation = [0; 512];
-        for i in 0..256 {
-            let random = rand.gen_range(0..(256 - i)) as i16;
-            permutation[i] = random + i as i16;
-            permutation[i + random as usize] = i as i16;
-        }
-        Self {
+        let permutation = [0; 512];
+        let mut value = Self {
             x_offset: rand.gen::<f64>() * 256.0,
             y_offset: rand.gen::<f64>() * 256.0,
             z_offset: rand.gen::<f64>() * 256.0,
             permutation,
             random: rand,
+        };
+
+        for i in 0..256 {
+            let random = value.random.gen_range(0..(256 - i)) as PermutationType;
+            value.permutation[i] = random + i as PermutationType;
+            value.permutation[i + random as usize] = i as PermutationType;
         }
+        if cfg!(debug_assertions) {
+            debug!("Permutation: {:#?}", value);
+            debug!("Permutation Length: {:#?}", value.permutation.len());
+        }
+
+        value
     }
     #[inline(always)]
-    pub fn map<B>(&self, v: B) -> PermutationType where B: BitAnd<PermutationType, Output = PermutationType> {
+    pub fn map<B>(&self, v: B) -> PermutationType where B: BitAnd<PermutationType, Output=PermutationType> {
         self.permutation[v.bitand(0xFF as PermutationType) as usize] & 0xFF
     }
     #[inline(always)]
@@ -70,8 +78,8 @@ impl<Random: MinecraftRandom> ImprovedNoise<Random> {
         }
     }
     #[inline(always)]
-    pub fn grad<B>(hash: B, x: f64, y: f64, z: f64) -> f64  where B: BitAnd<PermutationType, Output = PermutationType>  {
-        Self::dot(GRADIENTS[hash.bitand(0xFF ) as usize], x, y, z)
+    pub fn grad<B>(hash: B, x: f64, y: f64, z: f64) -> f64 where B: BitAnd<PermutationType, Output=PermutationType> {
+        Self::dot(GRADIENTS[hash.bitand(0xF) as usize], x, y, z)
     }
     pub fn noise(&self, x: f64, y: f64, z: f64, scale_y: f64, y_max: f64) -> f64 {
         let x_plus_offset = (x + self.x_offset);

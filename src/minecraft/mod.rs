@@ -5,7 +5,6 @@ use crate::minecraft::improved_noise::ImprovedNoise;
 use crate::minecraft::random::MinecraftRandom;
 use crate::Noise;
 use rand::{Rng, SeedableRng};
-use rand_xoshiro::Xoroshiro128PlusPlus;
 use std::fmt::Debug;
 
 #[derive(Debug, Clone)]
@@ -83,12 +82,12 @@ impl<Random: MinecraftRandom> MinecraftPerlin<Random> {
         }
         result
     }
-    pub fn get_value(&mut self, x: f64, y: f64, z: f64, scale_y: f64, y_max: f64) -> f64 {
+    pub fn get_value(&self, x: f64, y: f64, z: f64, scale_y: f64, y_max: f64) -> f64 {
         let mut result = 0.0;
         let mut input_factor = self.lowest_freq_input_factor;
         let mut value_factor = self.lowest_freq_value_factor;
-        for (noise, amplitude) in self.noise_levels.iter_mut().zip(self.amplitudes.iter()) {
-            if let Some(value) = noise.as_mut() {
+        for (noise, amplitude) in self.noise_levels.iter().zip(self.amplitudes.iter()) {
+            if let Some(value) = noise.as_ref() {
                 let noise_value = value.noise(
                     Self::wrap_value(x * input_factor),
                     Self::wrap_value(y * input_factor),
@@ -119,5 +118,21 @@ impl<Random: MinecraftRandom> MinecraftPerlin<Random> {
     #[inline(always)]
     pub(crate) fn wrap_value(value: f64) -> f64 {
         value - (value / 3.3554432000e7 + 0.5).floor() * 3.3554432000e7
+    }
+}
+
+#[cfg(test)]
+pub mod minecraft_test {
+    use simple_logger::SimpleLogger;
+    use crate::minecraft::MinecraftPerlin;
+    use crate::minecraft::random::MinecraftRandom;
+    use crate::minecraft::random::xoroshiro::MinecraftXoroshiro128;
+
+    #[test]
+    pub fn test() {
+        SimpleLogger::new().init().unwrap();
+        let mut perlin = MinecraftPerlin::new((vec![1.0, 1.0, 1.0, 0.0], -3.0), MinecraftXoroshiro128::new(3_658));
+        let value = perlin.get_value(0.0, 0.0, 0.0, 0.0, 0.0);
+        println!("Value: {}", value);
     }
 }

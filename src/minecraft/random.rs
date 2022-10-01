@@ -3,6 +3,7 @@ use rand_xoshiro::Xoroshiro128PlusPlus;
 use std::fmt::Debug;
 
 pub trait MinecraftRandom: Rng + Debug + Clone {
+    fn new(seed: i128) -> Self;
     fn new_from_hash<V: AsRef<[u8]>>(&self, v: V) -> Self;
 }
 pub mod legacy {
@@ -44,6 +45,18 @@ pub mod xoroshiro {
     }
 
     impl MinecraftRandom for MinecraftXoroshiro128 {
+        fn new(seed: i128) -> Self {
+            let seed_low = (seed & 0xFFFF_FFFF_FFFF_FFFF) as i64;
+            let seed_high = ((seed >> 64) & 0xFFFF_FFFF_FFFF_FFFF) as i64;
+
+            let rand = Xoroshiro128PlusPlus::from_seed(seed.to_be_bytes());
+            Self {
+                seed_low,
+                seed_high,
+                rand,
+            }
+        }
+
         fn new_from_hash<V: AsRef<[u8]>>(&self, v: V) -> Self {
             let hash = md5::compute(v).0;
 
