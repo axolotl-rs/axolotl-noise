@@ -1,5 +1,5 @@
-mod improved_noise;
-mod random;
+pub mod improved_noise;
+pub mod random;
 
 use crate::minecraft::improved_noise::ImprovedNoise;
 use crate::minecraft::random::MinecraftRandom;
