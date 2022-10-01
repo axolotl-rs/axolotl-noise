@@ -21,9 +21,9 @@ pub mod xoroshiro {
 
     #[derive(Debug, Clone)]
     pub struct MinecraftXoroshiro128 {
-        seed_low: i64,
-        seed_high: i64,
-        rand: Xoroshiro128PlusPlus,
+        pub seed_low: i64,
+        pub seed_high: i64,
+        pub rand: Xoroshiro128PlusPlus,
     }
 
     impl RngCore for MinecraftXoroshiro128 {
