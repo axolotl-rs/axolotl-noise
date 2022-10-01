@@ -15,6 +15,7 @@ pub mod legacy {
 }
 
 pub mod xoroshiro {
+    pub use rand_xoshiro;
     use crate::minecraft::random::MinecraftRandom;
     use rand::{Error, Rng, RngCore, SeedableRng};
     use rand_xoshiro::Xoroshiro128PlusPlus;
