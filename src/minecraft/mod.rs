@@ -7,6 +7,8 @@ use crate::Noise;
 use rand::{Rng, SeedableRng};
 use std::fmt::Debug;
 
+pub const BIG_NUMBER: f64 = 33_554_432 as f64;
+
 #[derive(Debug, Clone)]
 pub struct MinecraftPerlin<Random: MinecraftRandom> {
     amplitudes: Vec<f64>,
@@ -117,21 +119,24 @@ impl<Random: MinecraftRandom> MinecraftPerlin<Random> {
     }
     #[inline(always)]
     pub(crate) fn wrap_value(value: f64) -> f64 {
-        value - (value / 3.3554432000e7 + 0.5).floor() * 3.3554432000e7
+        value - (value / BIG_NUMBER + 0.5).floor() * BIG_NUMBER
     }
 }
 
 #[cfg(test)]
 pub mod minecraft_test {
-    use simple_logger::SimpleLogger;
-    use crate::minecraft::MinecraftPerlin;
-    use crate::minecraft::random::MinecraftRandom;
     use crate::minecraft::random::xoroshiro::MinecraftXoroshiro128;
+    use crate::minecraft::random::MinecraftRandom;
+    use crate::minecraft::MinecraftPerlin;
+    use simple_logger::SimpleLogger;
 
     #[test]
     pub fn test() {
         SimpleLogger::new().init().unwrap();
-        let mut perlin = MinecraftPerlin::new((vec![1.0, 1.0, 1.0, 0.0], -3), MinecraftXoroshiro128::new(3_658));
+        let mut perlin = MinecraftPerlin::new(
+            (vec![1.0, 1.0, 1.0, 0.0], -3),
+            MinecraftXoroshiro128::new(3_658),
+        );
         let value = perlin.get_value(0.0, 0.0, 0.0, 0.0, 0.0);
         println!("Value: {}", value);
     }

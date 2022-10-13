@@ -1,23 +1,55 @@
-use rand::{Error, Rng, RngCore, SeedableRng};
-use rand_xoshiro::Xoroshiro128PlusPlus;
+use rand::Rng;
 use std::fmt::Debug;
 
 pub trait MinecraftRandom: Rng + Debug + Clone {
     fn new(seed: i128) -> Self;
     fn new_from_hash<V: AsRef<[u8]>>(&self, v: V) -> Self;
 }
-pub mod legacy {
-    use std::sync::atomic::AtomicI64;
 
+pub mod legacy {
+    use crate::minecraft::random::MinecraftRandom;
+    use rand::{Error, RngCore};
+    use std::fmt::Debug;
+
+    #[derive(Debug, Clone)]
     pub struct LegacyRandom {
-        seed: AtomicI64,
+        pub seed_low: i64,
+        pub seed_high: i64,
+    }
+
+    impl RngCore for LegacyRandom {
+        fn next_u32(&mut self) -> u32 {
+            todo!()
+        }
+
+        fn next_u64(&mut self) -> u64 {
+            todo!()
+        }
+
+        fn fill_bytes(&mut self, dest: &mut [u8]) {
+            todo!()
+        }
+
+        fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
+            todo!()
+        }
+    }
+
+    impl MinecraftRandom for LegacyRandom {
+        fn new(seed: i128) -> Self {
+            todo!()
+        }
+
+        fn new_from_hash<V: AsRef<[u8]>>(&self, v: V) -> Self {
+            todo!()
+        }
     }
 }
 
 pub mod xoroshiro {
-    pub use rand_xoshiro;
     use crate::minecraft::random::MinecraftRandom;
-    use rand::{Error, Rng, RngCore, SeedableRng};
+    use rand::{Error, RngCore, SeedableRng};
+    pub use rand_xoshiro;
     use rand_xoshiro::Xoroshiro128PlusPlus;
 
     #[derive(Debug, Clone)]
@@ -84,6 +116,8 @@ pub mod xoroshiro {
                 seed_high_bytes[6],
                 seed_high_bytes[7],
             ];
+            #[cfg(feature = "debug")]
+            log::debug!("seed: {:x?}", seed);
             return Self {
                 seed_low,
                 seed_high,
